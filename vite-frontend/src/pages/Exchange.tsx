@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
-import { TradingChart } from '@/components/TradingChart';
+import  {TradingViewChart}  from '@/components/TradingChart';
 import { OrderBook } from '@/components/OrderBook';
 import { TradeHistory } from '@/components/TradeHistory';
 import { TradingInterface } from '@/components/TradingInterface';
@@ -80,7 +80,9 @@ const Exchange = () => {
                 {/* Chart */}
                 <ResizablePanel defaultSize={70} minSize={50}>
                   <div className="h-full bg-slate-900">
-                    <TradingChart currentPrice={currentPrice} />
+                    {/* <TradingViewChart currentPrice={currentPrice} /> */}
+                    <TradingViewChart  />
+
                   </div>
                 </ResizablePanel>
 

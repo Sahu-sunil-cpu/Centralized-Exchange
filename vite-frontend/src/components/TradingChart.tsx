@@ -1,98 +1,103 @@
 
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
+import { AreaSeries, createChart, ColorType } from 'lightweight-charts';
+import React, { useEffect, useRef } from 'react';
 
-interface TradingChartProps {
-  currentPrice: string;
-}
+export const ChartComponent = props => {
+  const {
+    data,
+    colors: {
+      backgroundColor = 'white',
+      lineColor = '#2962FF',
+      textColor = 'black',
+      areaTopColor = '#2962FF',
+      areaBottomColor = 'rgba(41, 98, 255, 0.28)',
+    } = {},
+  } = props;
 
-export const TradingChart: React.FC<TradingChartProps> = ({ currentPrice }) => {
-  const [selectedTimeframe, setSelectedTimeframe] = useState('1h');
-  
-  const timeframes = ['3m', '15m', '1h', '4h', '1d', '1w'];
+  const chartContainerRef = useRef();
 
-  // Generate mock candlestick data
-  const generateCandlestickData = () => {
-    const data = [];
-    let price = parseFloat(currentPrice);
-    
-    for (let i = 0; i < 50; i++) {
-      const open = price;
-      const volatility = price * 0.02;
-      const high = open + Math.random() * volatility;
-      const low = open - Math.random() * volatility;
-      const close = low + Math.random() * (high - low);
-      
-      data.push({ open, high, low, close, volume: Math.random() * 1000000 });
-      price = close;
-    }
-    return data;
-  };
+  useEffect(
+    () => {
+      const handleResize = () => {
+        //@ts-ignore
+        chart.applyOptions({ width: chartContainerRef.current.clientWidth });
+      };
 
-  const candlestickData = generateCandlestickData();
+      const chart = createChart(chartContainerRef.current, {
+        layout: {
+          background: { type: ColorType.Solid, color: backgroundColor },
+          textColor,
+        },
+        //@ts-ignore
+
+        width: chartContainerRef.current.clientWidth,
+        height: 400,
+      });
+      chart.timeScale().fitContent();
+
+      const newSeries = chart.addSeries(AreaSeries, { lineColor, topColor: areaTopColor, bottomColor: areaBottomColor });
+      newSeries.setData(data);
+
+      window.addEventListener('resize', handleResize);
+
+      return () => {
+        window.removeEventListener('resize', handleResize);
+
+        chart.remove();
+      };
+    },
+    [data, backgroundColor, lineColor, textColor, areaTopColor, areaBottomColor]
+  );
 
   return (
-    <div className="h-full flex flex-col bg-slate-900">
-      {/* Chart Controls */}
-      <div className="h-12 border-b border-slate-700 flex items-center justify-between px-4">
-        <div className="flex items-center space-x-2">
-          {timeframes.map(tf => (
-            <Button
-              key={tf}
-              size="sm"
-              variant={selectedTimeframe === tf ? "default" : "ghost"}
-              className={`text-xs ${selectedTimeframe === tf ? 'bg-cyan-500 text-white' : 'text-slate-400 hover:text-cyan-400'}`}
-              onClick={() => setSelectedTimeframe(tf)}
-            >
-              {tf}
-            </Button>
-          ))}
-        </div>
-        
-        <div className="flex items-center space-x-4 text-sm text-slate-400">
-          <span>O: ${candlestickData[candlestickData.length - 1]?.open.toFixed(4)}</span>
-          <span>H: ${candlestickData[candlestickData.length - 1]?.high.toFixed(4)}</span>
-          <span>L: ${candlestickData[candlestickData.length - 1]?.low.toFixed(4)}</span>
-          <span>C: ${candlestickData[candlestickData.length - 1]?.close.toFixed(4)}</span>
-        </div>
-      </div>
-
-      {/* Mock Chart Area */}
-      <div className="flex-1 relative bg-slate-900 p-4">
-        <div className="w-full h-full flex items-end justify-between space-x-1">
-          {candlestickData.map((candle, index) => {
-            const isGreen = candle.close > candle.open;
-            const bodyHeight = Math.abs(candle.close - candle.open) * 200;
-            const wickTop = (candle.high - Math.max(candle.open, candle.close)) * 200;
-            const wickBottom = (Math.min(candle.open, candle.close) - candle.low) * 200;
-            
-            return (
-              <div key={index} className="flex flex-col items-center" style={{ width: '2%' }}>
-                {/* Upper wick */}
-                <div 
-                  className={`w-0.5 ${isGreen ? 'bg-green-400' : 'bg-red-400'}`}
-                  style={{ height: `${wickTop}px` }}
-                />
-                {/* Body */}
-                <div 
-                  className={`w-full ${isGreen ? 'bg-green-400' : 'bg-red-400'} opacity-80`}
-                  style={{ height: `${Math.max(bodyHeight, 2)}px` }}
-                />
-                {/* Lower wick */}
-                <div 
-                  className={`w-0.5 ${isGreen ? 'bg-green-400' : 'bg-red-400'}`}
-                  style={{ height: `${wickBottom}px` }}
-                />
-              </div>
-            );
-          })}
-        </div>
-        
-        {/* Price line indicator */}
-        <div className="absolute right-0 top-1/2 bg-cyan-500 text-white px-2 py-1 text-xs rounded-l">
-          ${currentPrice}
-        </div>
-      </div>
-    </div>
+    <div
+      ref={chartContainerRef}
+    />
   );
 };
+
+const initialData = [
+  { time: '2018-12-22', value: 32.5 },
+  { time: '2018-12-23', value: 32.0 },
+  { time: '2018-12-24', value: 31.5 },
+  { time: '2018-12-25', value: 31.6 },
+  { time: '2018-12-26', value: 31.1 },
+  { time: '2018-12-27', value: 31.6 },
+  { time: '2018-12-28', value: 31.1 },
+  { time: '2018-12-29', value: 30.6 },
+  { time: '2018-12-30', value: 30.1 },
+  { time: '2018-12-31', value: 29.6 }
+];
+
+export function TradingViewChart(props) {
+  return (
+    <ChartComponent {...props} data={initialData}></ChartComponent>
+  );
+}
+
+function generateTimeSeries(startTime, count) {
+  const data = [];
+  let currentTime = new Date(startTime).getTime();
+  let value = 30.0; // starting value
+
+  for (let i = 0; i < count; i++) {
+    // Push time in ISO format and rounded value
+    data.push({
+      time: new Date(currentTime).toISOString(),
+      value: parseFloat(value.toFixed(2))
+    });
+
+    // Increment time by 5 seconds
+    currentTime += 5000;
+
+    // Simulate small change in value (±0.1 to ±0.5)
+    const change = (Math.random() * 0.4 + 0.1) * (Math.random() < 0.5 ? -1 : 1);
+    value += change;
+  }
+
+  return data;
+}
+
+// Example usage:
+const realTimeData = generateTimeSeries('2025-06-24T18:00:00Z', 10);
+console.log(realTimeData);
