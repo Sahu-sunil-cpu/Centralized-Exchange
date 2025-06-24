@@ -1,0 +1,1 @@
+{"root":["./src/index.ts","./src/redis/redismanager.ts","./src/types/incomingmessage.ts","./src/types/outgoingmessage.ts","./src/users/usermanager.ts"],"version":"5.6.3"}
