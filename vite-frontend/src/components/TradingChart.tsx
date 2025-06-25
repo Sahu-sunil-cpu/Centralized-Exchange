@@ -1,14 +1,14 @@
 
-import { AreaSeries, createChart, ColorType } from 'lightweight-charts';
+import { AreaSeries, createChart, ColorType, CandlestickSeries, CrosshairMode, LineStyle } from 'lightweight-charts';
 import React, { useEffect, useRef } from 'react';
 
 export const ChartComponent = props => {
   const {
     data,
     colors: {
-      backgroundColor = 'white',
+      backgroundColor = '#1e293b',
       lineColor = '#2962FF',
-      textColor = 'black',
+      textColor = 'white',
       areaTopColor = '#2962FF',
       areaBottomColor = 'rgba(41, 98, 255, 0.28)',
     } = {},
@@ -32,12 +32,97 @@ export const ChartComponent = props => {
 
         width: chartContainerRef.current.clientWidth,
         height: 400,
+        grid: {
+          vertLines: { color: "#444" },
+          horzLines: { color: "#444" },
+        },
       });
+
+      chart.timeScale().applyOptions({
+        barSpacing: 10,
+      });
+
+      chart.applyOptions({
+        crosshair: {
+          // Change mode from default 'magnet' to 'normal'.
+          // Allows the crosshair to move freely without snapping to datapoints
+          mode: CrosshairMode.Normal,
+
+          // Vertical crosshair line (showing Date in Label)
+          vertLine: {
+            width: 4,
+            color: "#C3BCDB44",
+            style: LineStyle.Solid,
+            labelBackgroundColor: "#9B7DFF",
+          },
+
+          // Horizontal crosshair line (showing Price in Label)
+          horzLine: {
+            color: "#9B7DFF",
+            labelBackgroundColor: "#9B7DFF",
+          },
+        },
+      });
+
+      chart.timeScale().applyOptions({
+        borderColor: "#71649C",
+      });
+
+      const series = chart.addSeries(CandlestickSeries, {
+        upColor: '#26a69a',
+        downColor: '#ef5350',
+        borderVisible: false,
+        wickUpColor: '#26a69a',
+        wickDownColor: '#ef5350',
+      });
+
+      const data = generateData(2500, 20, 1000);
+      series.setData(data.initialData);
       chart.timeScale().fitContent();
 
-      const newSeries = chart.addSeries(AreaSeries, { lineColor, topColor: areaTopColor, bottomColor: areaBottomColor });
-      newSeries.setData(data);
+      //@ts-ignore
+      chart.timeScale().scrollToPosition(5);
+      // simulate real-time data
+      function* getNextRealtimeUpdate(realtimeData) {
+        for (const dataPoint of realtimeData) {
+          yield dataPoint;
+        }
+        return null;
+      }
+      const streamingDataProvider = getNextRealtimeUpdate(data.realtimeUpdates);
 
+      const lineData = data.initialData.map((datapoint) => ({
+        time: datapoint.time,
+        value: (datapoint.close + datapoint.open) / 2,
+      }));
+
+      // Add an area series to the chart,
+      // Adding this before we add the candlestick chart
+      // so that it will appear beneath the candlesticks
+      const areaSeries = chart.addSeries(AreaSeries, {
+        lastValueVisible: false, // hide the last value marker for this series
+        crosshairMarkerVisible: false, // hide the crosshair marker for this series
+        lineColor: "transparent", // hide the line
+        topColor: "rgba(56, 33, 110,0.6)",
+        bottomColor: "rgba(56, 33, 110, 0.1)",
+      });
+      // Set the data for the Area Series
+      areaSeries.setData(lineData);
+
+     
+
+    
+
+
+
+      const intervalID = setInterval(() => {
+        const update = streamingDataProvider.next();
+        if (update.done) {
+          clearInterval(intervalID);
+          return;
+        }
+        series.update(update.value);
+      }, 100);
       window.addEventListener('resize', handleResize);
 
       return () => {
@@ -101,3 +186,77 @@ function generateTimeSeries(startTime, count) {
 // Example usage:
 const realTimeData = generateTimeSeries('2025-06-24T18:00:00Z', 10);
 console.log(realTimeData);
+
+
+
+let randomFactor = 25 + Math.random() * 25;
+const samplePoint = i =>
+  i *
+  (0.5 +
+    Math.sin(i / 1) * 0.2 +
+    Math.sin(i / 2) * 0.4 +
+    Math.sin(i / randomFactor) * 0.8 +
+    Math.sin(i / 50) * 0.5) +
+  200 +
+  i * 2;
+
+function generateData(
+  numberOfCandles = 500,
+  updatesPerCandle = 5,
+  startAt = 100
+) {
+  const createCandle = (val, time) => ({
+    time,
+    open: val,
+    high: val,
+    low: val,
+    close: val,
+  });
+
+  const updateCandle = (candle, val) => ({
+    time: candle.time,
+    close: val,
+    open: candle.open,
+    low: Math.min(candle.low, val),
+    high: Math.max(candle.high, val),
+  });
+
+  randomFactor = 25 + Math.random() * 25;
+  const date = new Date(Date.UTC(2018, 0, 1, 12, 0, 0, 0));
+  const numberOfPoints = numberOfCandles * updatesPerCandle;
+  const initialData = [];
+  const realtimeUpdates = [];
+  let lastCandle;
+  let previousValue = samplePoint(-1);
+  for (let i = 0; i < numberOfPoints; ++i) {
+    if (i % updatesPerCandle === 0) {
+      date.setUTCDate(date.getUTCDate() + 1);
+    }
+    const time = date.getTime() / 1000;
+    let value = samplePoint(i);
+    const diff = (value - previousValue) * Math.random();
+    value = previousValue + diff;
+    previousValue = value;
+    if (i % updatesPerCandle === 0) {
+      const candle = createCandle(value, time);
+      lastCandle = candle;
+      if (i >= startAt) {
+        realtimeUpdates.push(candle);
+      }
+    } else {
+      const newCandle = updateCandle(lastCandle, value);
+      lastCandle = newCandle;
+      if (i >= startAt) {
+        realtimeUpdates.push(newCandle);
+      } else if ((i + 1) % updatesPerCandle === 0) {
+        initialData.push(newCandle);
+      }
+    }
+  }
+
+  return {
+    initialData,
+    realtimeUpdates,
+  };
+}
+

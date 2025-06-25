@@ -90,7 +90,7 @@ const Index = () => {
             <Button 
               size="lg" 
               className="bg-gradient-to-r from-cyan-500 to-green-500 hover:from-cyan-600 hover:to-green-600 text-white px-8 py-4 text-lg font-semibold transition-all duration-300 hover:scale-105"
-              onClick={() => navigate('/exchange')}
+              onClick={() => navigate('/exchange/TATA_INR')}
             >
               Launch App
             </Button>
@@ -126,7 +126,7 @@ const Index = () => {
           {/* Markets Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {markets.map((market, index) => (
-              <MarketCard key={market.symbol} market={market} index={index} />
+              <MarketCard key={market.symbol} market={market} index={index} onClick={() => navigate(`/exchange/${market.symbol.replace("/", "_")}`)} />
             ))}
           </div>
         </div>

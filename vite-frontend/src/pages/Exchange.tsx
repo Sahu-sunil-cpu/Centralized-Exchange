@@ -10,10 +10,14 @@ import { TradeHistory } from '@/components/TradeHistory';
 import { TradingInterface } from '@/components/TradingInterface';
 import { TopNavBar } from '@/components/TopNavBar';
 import { TickerStrip } from '@/components/TickerStrip';
+import { Router, useParams } from 'react-router-dom';
+import { useSocket } from '@/hooks/useSocket';
+import { WsManager } from '@/lib/WsManger';
 
 const Exchange = () => {
   const [selectedPair, setSelectedPair] = useState('SUI/USDT');
   const [currentPrice, setCurrentPrice] = useState('2.4567');
+  const {ticker} = useParams();
 
   // Simulate price updates
   useEffect(() => {
@@ -23,8 +27,21 @@ const Exchange = () => {
       setCurrentPrice(newPrice.toFixed(4));
     }, 2000);
 
+  
+      const message = {
+        type: "ADD_USER",
+        payload: {
+            tickerId: `@${ticker}`
+        }
+    }
+
+    WsManager.getInstance().init();
+    WsManager.getInstance().sendMessage(message);
+   
+    
+
     return () => clearInterval(interval);
-  }, [currentPrice]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-900 text-white">

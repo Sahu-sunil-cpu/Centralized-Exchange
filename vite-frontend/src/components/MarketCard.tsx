@@ -15,6 +15,7 @@ interface Market {
 interface MarketCardProps {
   market: Market;
   index: number;
+  onClick: () => any;
 }
 
 const Sparkline = ({ data, isPositive }: { data: number[], isPositive: boolean }) => {
@@ -41,7 +42,7 @@ const Sparkline = ({ data, isPositive }: { data: number[], isPositive: boolean }
   );
 };
 
-export const MarketCard: React.FC<MarketCardProps> = ({ market, index }) => {
+export const MarketCard: React.FC<MarketCardProps> = ({ market, index, onClick }) => {
   const isPositive = parseFloat(market.change) >= 0;
   const changeClass = isPositive ? 'text-green-400' : 'text-red-400';
   const bgClass = isPositive ? 'hover:bg-green-500/5' : 'hover:bg-red-500/5';
@@ -50,6 +51,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({ market, index }) => {
     <div 
       className={`bg-slate-800/50 border border-slate-700/50 rounded-lg p-4 hover:border-cyan-500/30 transition-all duration-300 hover:scale-[1.02] ${bgClass} backdrop-blur-sm`}
       style={{ animationDelay: `${index * 50}ms` }}
+      onClick={onClick}
     >
       <div className="flex items-center justify-between mb-3">
         <div className="font-semibold text-white text-lg">{market.symbol}</div>
