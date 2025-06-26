@@ -1,23 +1,21 @@
 
-import React, { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
-import  {TradingViewChart}  from '@/components/TradingChart';
-import { OrderBook } from '@/components/OrderBook';
+import { TradingViewChart } from '@/components/TradingChart';
+import { Depth, OrderBook } from '@/components/OrderBook';
 import { TradeHistory } from '@/components/TradeHistory';
 import { TradingInterface } from '@/components/TradingInterface';
 import { TopNavBar } from '@/components/TopNavBar';
 import { TickerStrip } from '@/components/TickerStrip';
-import { Router, useParams } from 'react-router-dom';
-import { useSocket } from '@/hooks/useSocket';
+import { useParams } from 'react-router-dom';
 import { WsManager } from '@/lib/WsManger';
 
 const Exchange = () => {
   const [selectedPair, setSelectedPair] = useState('SUI/USDT');
   const [currentPrice, setCurrentPrice] = useState('2.4567');
-  const {ticker} = useParams();
+  const { ticker } = useParams();
 
   // Simulate price updates
   useEffect(() => {
@@ -27,18 +25,16 @@ const Exchange = () => {
       setCurrentPrice(newPrice.toFixed(4));
     }, 2000);
 
-  
-      const message = {
-        type: "ADD_USER",
-        payload: {
-            tickerId: `@${ticker}`
-        }
+
+    const message = {
+      type: "ADD_USER",
+      payload: {
+        tickerId: `@${ticker}`
+      }
     }
 
     WsManager.getInstance().init();
     WsManager.getInstance().sendMessage(message);
-   
-    
 
     return () => clearInterval(interval);
   }, []);
@@ -47,13 +43,13 @@ const Exchange = () => {
     <div className="min-h-screen bg-slate-900 text-white">
       <TopNavBar />
       <TickerStrip />
-      
+
       <div className="h-[calc(100vh-112px)]">
         <ResizablePanelGroup direction="horizontal">
           {/* Left Side - Order Book */}
           <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
-            <div className="h-full border-r border-slate-700 bg-slate-900">
-              <OrderBook currentPrice={currentPrice} />
+            <div className="h-full border-r border-slate-700 bg-slate-900 scroll">
+              <Depth market={ticker.replace("/", "_")} />
             </div>
           </ResizablePanel>
 
@@ -76,7 +72,7 @@ const Exchange = () => {
                       <SelectItem value="SOL/USDT">SOL/USDT</SelectItem>
                     </SelectContent>
                   </Select>
-                  
+
                   <div className="flex items-center space-x-4">
                     <div>
                       <div className="text-2xl font-bold text-green-400">${currentPrice}</div>
@@ -98,7 +94,7 @@ const Exchange = () => {
                 <ResizablePanel defaultSize={70} minSize={50}>
                   <div className="h-full bg-slate-900">
                     {/* <TradingViewChart currentPrice={currentPrice} /> */}
-                    <TradingViewChart  />
+                    <TradingViewChart />
 
                   </div>
                 </ResizablePanel>
@@ -116,23 +112,23 @@ const Exchange = () => {
                         <TabsTrigger value="history">History</TabsTrigger>
                         <TabsTrigger value="balances">Balances</TabsTrigger>
                       </TabsList>
-                      
+
                       <TabsContent value="trades" className="mt-0 h-full">
                         <TradeHistory />
                       </TabsContent>
-                      
+
                       <TabsContent value="depth" className="mt-0 h-full p-4">
                         <div className="text-slate-400">Market depth visualization would go here</div>
                       </TabsContent>
-                      
+
                       <TabsContent value="orders" className="mt-0 h-full p-4">
                         <div className="text-slate-400">Open orders would go here</div>
                       </TabsContent>
-                      
+
                       <TabsContent value="history" className="mt-0 h-full p-4">
                         <div className="text-slate-400">Order history would go here</div>
                       </TabsContent>
-                      
+
                       <TabsContent value="balances" className="mt-0 h-full p-4">
                         <div className="text-slate-400">Account balances would go here</div>
                       </TabsContent>

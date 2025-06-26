@@ -1,66 +1,142 @@
 
-import React from 'react';
+import { getDepth, getTickers, getTrades } from '@/lib/httpClient';
+import { WsManager } from '@/lib/WsManger';
+import React, { useEffect, useState } from 'react';
+import { BidTable } from './orderbook/bids';
+import { Asks, AskTable } from './orderbook/asks';
 
-interface OrderBookProps {
-  currentPrice: string;
-}
 
-export const OrderBook: React.FC<OrderBookProps> = ({ currentPrice }) => {
-  // Mock order book data
-  const askOrders = [
-    { price: '2.4789', quantity: '1.245K', total: '3.087K' },
-    { price: '2.4756', quantity: '2.134K', total: '5.284K' },
-    { price: '2.4723', quantity: '3.567K', total: '8.825K' },
-    { price: '2.4698', quantity: '1.876K', total: '4.635K' },
-    { price: '2.4672', quantity: '2.987K', total: '7.374K' },
-  ];
 
-  const bidOrders = [
-    { price: '2.4634', quantity: '2.456K', total: '6.054K' },
-    { price: '2.4601', quantity: '1.789K', total: '4.402K' },
-    { price: '2.4578', quantity: '3.234K', total: '7.951K' },
-    { price: '2.4545', quantity: '1.567K', total: '3.846K' },
-    { price: '2.4512', quantity: '2.876K', total: '7.057K' },
-  ];
+export const OrderBook = ({ asks, bids, currentPrice }: { asks: [string, string][], bids: [string, string][], currentPrice: string }) => {
 
   return (
-    <div className="h-full bg-slate-900 p-4">
-      <div className="text-white font-semibold mb-4 text-sm">Order Book</div>
-      
-      {/* Header */}
-      <div className="grid grid-cols-3 text-xs text-slate-400 mb-2">
-        <div>Price</div>
-        <div className="text-right">Quantity</div>
-        <div className="text-right">Total</div>
-      </div>
-
-      {/* Ask Orders (Sell) */}
-      <div className="mb-4">
-        {askOrders.map((order, index) => (
-          <div key={`ask-${index}`} className="grid grid-cols-3 text-xs py-1 hover:bg-slate-800 cursor-pointer">
-            <div className="text-red-400">{order.price}</div>
-            <div className="text-right text-slate-300">{order.quantity}</div>
-            <div className="text-right text-slate-400">{order.total}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Current Price */}
-      <div className="text-center py-2 mb-4">
-        <div className="text-green-400 font-bold text-lg">${currentPrice}</div>
-        <div className="text-xs text-slate-400">Mark Price</div>
-      </div>
-
-      {/* Bid Orders (Buy) */}
-      <div>
-        {bidOrders.map((order, index) => (
-          <div key={`bid-${index}`} className="grid grid-cols-3 text-xs py-1 hover:bg-slate-800 cursor-pointer">
-            <div className="text-green-400">{order.price}</div>
-            <div className="text-right text-slate-300">{order.quantity}</div>
-            <div className="text-right text-slate-400">{order.total}</div>
-          </div>
-        ))}
-      </div>
+    <div className="h-full bg-slate-900 p-4 flex flex-col">
+    <div className="text-white font-semibold mb-4 text-sm">Order Book</div>
+    
+    {/* Header */}
+    <div className="grid grid-cols-3 text-xs text-slate-400 mb-2">
+      <div>Price</div>
+      <div className="text-right">Quantity</div>
+      <div className="text-right">Total</div>
     </div>
+
+    {/* Ask Orders (Sell) - Scrollable with hidden scrollbar */}
+ 
+      {asks && <AskTable asks={asks} />}
+  
+ 
+
+    {/* Current Price - Fixed at center */}
+    <div className="text-center py-3 my-2 border-t border-b border-slate-700 bg-slate-800/50">
+      <div className="text-green-400 font-bold text-lg">${currentPrice}</div>
+      <div className="text-xs text-slate-400">Mark Price</div>
+    </div>
+
+    {/* Bid Orders (Buy) - Scrollable with hidden scrollbar */}
+   
+      {bids && <BidTable bids={bids} />}
+      </div>
+ 
   );
 };
+
+const askOrders: [string, string][] = [
+  ["20", "40"],
+  ["40", "20"],
+  ["21", "40"],
+  ["42", "20"],
+ 
+];
+
+const bidOrders: [string, string][] = [
+  ["20", "40"],
+  ["40", "20"]
+];
+
+
+export function Depth({ market }: { market: string }) {
+  const [bids, setBids] = useState<[string, string][]>();
+  const [asks, setAsks] = useState<[string, string][]>();
+  const [price, setPrice] = useState<string>();
+
+  useEffect(() => {
+    WsManager.getInstance().registerCallback("depth", (data: any) => {
+      console.log("depth has been updated");
+      console.log(data);
+
+      setBids((originalBids) => {
+        const bidsAfterUpdate = [...(originalBids || [])];
+        // console.log(asks)
+
+
+        // need to optimize
+        for (let i = 0; i < bidsAfterUpdate.length; i++) {
+          for (let j = 0; j < data.bids.length; j++) {
+            if (bidsAfterUpdate[i][0] === data.bids[j][0]) {
+              bidsAfterUpdate[i][1] = data.bids[j][1];
+              if (Number(bidsAfterUpdate[i][1]) === 0) {
+                bidsAfterUpdate.splice(i, 1);
+              }
+              break;
+            }
+          }
+        }
+
+        for (let j = 0; j < data.bids.length; j++) {
+          if (Number(data.bids[j][1]) !== 0 && !bidsAfterUpdate.map(x => x[0]).includes(data.bids[j][0])) {
+            bidsAfterUpdate.push(data.bids[j]);
+            break;
+          }
+        }
+        bidsAfterUpdate.sort((x, y) => Number(y[0]) > Number(x[0]) ? -1 : 1);
+        return bidsAfterUpdate;
+      });
+
+      setAsks((originalAsks) => {
+        const asksAfterUpdate = [...(originalAsks || [])];
+
+        for (let i = 0; i < asksAfterUpdate.length; i++) {
+          for (let j = 0; j < data.asks.length; j++) {
+            if (asksAfterUpdate[i][0] === data.asks[j][0]) {
+              asksAfterUpdate[i][1] = data.asks[j][1];
+              if (Number(asksAfterUpdate[i][1]) === 0) {
+                asksAfterUpdate.splice(i, 1);
+              }
+              break;
+            }
+          }
+        }
+
+        for (let j = 0; j < data.asks.length; j++) {
+          if (Number(data.asks[j][1]) !== 0 && !asksAfterUpdate.map(x => x[0]).includes(data.asks[j][0])) {
+            asksAfterUpdate.push(data.asks[j]);
+            break;
+          }
+        }
+        asksAfterUpdate.sort((x, y) => Number(y[0]) > Number(x[0]) ? 1 : -1);
+        return asksAfterUpdate;
+      });
+    }, `DEPTH-${market}`);
+
+
+    // getDepth(market.replace("/", "_")).then(d => {    
+    //     setBids(bidOrders.reverse());
+    //     setAsks(askOrders);
+    // });
+    setBids(bidOrders.reverse());
+    setAsks(askOrders);
+
+    //    getTickers(market).then(t => setPrice(t.lastPrice));
+    //  getTrades(market).then(t => setPrice(t[0].price));
+
+
+    return () => {
+      WsManager.getInstance().deRegisterCallback("depth", `DEPTH-${market}`);
+    }
+  }, [])
+  return <div>
+    {<OrderBook asks={asks} bids={bids} currentPrice={"678"} />}
+  </div>
+}
+
+

@@ -1,8 +1,10 @@
 
+import { WsManager } from '@/lib/WsManger';
 import { AreaSeries, createChart, ColorType, CandlestickSeries, CrosshairMode, LineStyle } from 'lightweight-charts';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 export const ChartComponent = props => {
+  const [book, setBook] = useState<any>(null);
   const {
     data,
     colors: {
@@ -15,6 +17,16 @@ export const ChartComponent = props => {
   } = props;
 
   const chartContainerRef = useRef();
+
+  // useEffect(() => {
+  // const interval =   setInterval(() => {
+  //     const msg = WsManager.getInstance().getDepth();
+  //     console.log(msg);
+  //   //  setBook(msg)
+  //   }, 500)
+   
+  //   return () => clearInterval(interval);
+  // }, [book])
 
   useEffect(
     () => {
@@ -179,6 +191,9 @@ function generateTimeSeries(startTime, count) {
     const change = (Math.random() * 0.4 + 0.1) * (Math.random() < 0.5 ? -1 : 1);
     value += change;
   }
+    
+
+  
 
   return data;
 }

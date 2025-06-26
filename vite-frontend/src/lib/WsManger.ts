@@ -1,5 +1,6 @@
+import { timeStamp } from "node:console";
 
-// export const BASE_URL = "wss://ws.backpack.exchange/"
+//write types for incoming and outgoing message
 export const BASE_URL = "ws://localhost:8080"
 
 export class WsManager {
@@ -9,6 +10,8 @@ export class WsManager {
     private callbacks: any = {};
     private id: number;
     private initialized: boolean = false;
+    private type: string;
+    private data: any;
 
     private constructor() {
         this.ws = new WebSocket(BASE_URL);
@@ -18,7 +21,7 @@ export class WsManager {
     }
 
     public static getInstance() {
-        if (!this.instance)  {
+        if (!this.instance) {
             this.instance = new WsManager();
         }
         return this.instance;
@@ -33,10 +36,14 @@ export class WsManager {
             this.bufferedMessages = [];
         }
         this.ws.onmessage = (event) => {
-            const {stream, data} = JSON.parse(event.data);
+            console.log("dgfgfgf", event)
+            const { stream, data } = JSON.parse(event.data);
 
             const type = stream.split("@")[0];
-            
+
+            this.type = type;
+            this.data = data;
+
             if (this.callbacks[type]) {
                 this.callbacks[type].forEach(({ callback }) => {
                     if (type === "ticker") {
@@ -50,16 +57,71 @@ export class WsManager {
                         }
                         console.log(newTicker);
                         callback(newTicker);
-                   }
-                   if (type === "depth") {
-                       
+                    }
+
+                    if (type === "depth") {
+
                         const updatedBids = data.b;
                         const updatedAsks = data.a;
                         callback({ bids: updatedBids, asks: updatedAsks });
                     }
+
+                    if(type === "trade") {
+                        // match check 
+                        const newTicker = {
+                            tradeId: data.t,
+                            matched: data.m,
+                            price: data.p,
+                            quantity: data.q,
+                            symbol: data.s,
+                            side: data.n,
+                            time: new Date().getTime()
+                        }
+                        console.log(newTicker);
+                        console.log(newTicker.time)
+                        callback(newTicker);
+                    }
                 });
             }
         }
+    }
+
+    getTicker() {
+        const data = this.data
+        if (this.type === "ticker") {
+            const newTicker = {
+                lastPrice: data.c,
+                high: data.h,
+                low: data.l,
+                volume: data.v,
+                quoteVolume: data.V,
+                symbol: data.s,
+            }
+            console.log(newTicker);
+
+            return newTicker;
+        }
+
+        console.log("no ticker data found");
+    }
+
+
+    getDepth() {
+        const data = this.data;
+
+        console.log(this.type)
+        if (this.type === "depth") {
+
+            const newDepth = {
+                bids: data.b,
+                asks: data.a,
+            }
+
+            console.log(newDepth);
+            return newDepth;
+        }
+
+        console.log("no ticker data found");
     }
 
     sendMessage(message: any) {
