@@ -12,8 +12,9 @@ export class RedisManager {
     public static getInstance() {
         if(!this.instance) {
             this.instance = new RedisManager();
+            console.log("instance doesn't exist");
         }
-
+       console.log("exist");
         return this.instance;
     }
 

@@ -27,12 +27,21 @@ export class UserManager {
 
 
    addUser(tickerId: string, ws: WebSocket) {
-      if (!this.rooms.get(tickerId)) {
+    
+       const users = this.rooms.get(tickerId);
+       if (!users) {
          this.rooms.set(tickerId, {
             users: []
          })
       }
 
+      const userExist = users?.users.find(({socket}) => socket == ws);
+      console.log(userExist)
+
+      if(userExist) {
+         console.log(`----------user id ${userExist.userId} already exist---------`);
+         return;
+      }
       const userId = this.getId().toString();
       this.rooms.get(tickerId)?.users.push({
          userId,
