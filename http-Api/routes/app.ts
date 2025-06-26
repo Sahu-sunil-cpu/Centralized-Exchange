@@ -3,6 +3,7 @@ import { Router } from "express";
 import { RedisManager } from "../redis/RedisManager";
 import { CANCEL_ORDER, CREATE_ORDER } from "../types/Outgoing";
 import { getRandom } from "../utils";
+import { getDepth, PlaceOrder } from ".";
 
 
 type OrderType = "limit" | "market";
@@ -18,25 +19,14 @@ interface Order {
 }
 
 export const globalRouter = Router();
-globalRouter.post("/order", async (req, res) => {
-    const { data } = req.body;
-   // console.log(req.body);
-
-    const client = new RedisManager();
-
-    const response = await client.sendAndAwait({
-        type: CREATE_ORDER,
-        data: data
-    })
-    // response -> database
-    // inserting into redis response and fill in order
-
-
-    res.send(
-        response
-    )
+globalRouter.post("/order", (req, res) => {
+    PlaceOrder(req, res);
 })
 
+
+globalRouter.get("/depth/:market", (req, res) => {
+    getDepth(req, res);
+})
 
 globalRouter.delete("/order", (req, res) => {
     const { orderId, market } = req.body;
