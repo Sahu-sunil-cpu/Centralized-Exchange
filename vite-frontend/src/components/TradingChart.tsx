@@ -1,10 +1,21 @@
 
+import { Kline } from '@/lib/klines';
 import { WsManager } from '@/lib/WsManger';
 import { AreaSeries, createChart, ColorType, CandlestickSeries, CrosshairMode, LineStyle } from 'lightweight-charts';
 import React, { useEffect, useRef, useState } from 'react';
 
+export interface klineType {
+  time: number;
+  open: number;
+  high: number;
+  low: number
+  close: number
+  volume: number
+}
+
 export const ChartComponent = props => {
-  const [book, setBook] = useState<any>(null);
+  const [candleData, setCandleData] = useState(null);
+  let candleRef = useRef(null);
   const {
     data,
     colors: {
@@ -16,135 +27,214 @@ export const ChartComponent = props => {
     } = {},
   } = props;
 
-  const chartContainerRef = useRef();
+  const chartContainerRef = useRef(null);
 
-  // useEffect(() => {
-  // const interval =   setInterval(() => {
-  //     const msg = WsManager.getInstance().getDepth();
-  //     console.log(msg);
-  //   //  setBook(msg)
-  //   }, 500)
-   
-  //   return () => clearInterval(interval);
-  // }, [book])
-
-  useEffect(
-    () => {
-      const handleResize = () => {
-        //@ts-ignore
-        chart.applyOptions({ width: chartContainerRef.current.clientWidth });
+  const getData = async () => {
+    const url = `http://localhost:4000/proxy?symbol=BTCUSDT&interval=5m`;
+    const res = await fetch(url);
+    const resp = await res.json();
+    //   console.log(resp);
+    const cdata = resp.map((row) => {
+      const [time1, open, high, low, close, volume] = row;
+      return {
+        time: time1 / 1000,   // ms -> sec
+        open: Number(open),
+        high: Number(high),
+        low: Number(low),
+        close: Number(close),
+        volume: Number(volume),
       };
+    });
 
-      const chart = createChart(chartContainerRef.current, {
-        layout: {
-          background: { type: ColorType.Solid, color: backgroundColor },
-          textColor,
-        },
-        //@ts-ignore
+    console.log(cdata)
+    setCandleData(cdata)
+    return cdata;
+  };
 
-        width: chartContainerRef.current.clientWidth,
-        height: 400,
-        grid: {
-          vertLines: { color: "#444" },
-          horzLines: { color: "#444" },
-        },
-      });
+  const candleData1m = async () => {
+    if (!chartContainerRef.current) {
+      console.log("html element not found");
+      return;
+    }
 
-      chart.timeScale().applyOptions({
-        barSpacing: 10,
-      });
+    console.log("yes")
+    const props = {
+      backgroundColor: '#1e293b',
+      lineColor: '#2962FF',
+      textColor: 'white',
+      areaTopColor: '#2962FF',
+      areaBottomColor: 'rgba(41, 98, 255, 0.28)',
+      width: chartContainerRef.current.clientWidth,
+      height: 400,
 
-      chart.applyOptions({
-        crosshair: {
-          // Change mode from default 'magnet' to 'normal'.
-          // Allows the crosshair to move freely without snapping to datapoints
-          mode: CrosshairMode.Normal,
+    }
+    const chart = new Kline(chartContainerRef.current, '1m', props);
+    const data = await getData();
+    data.forEach((k) => chart.upsertKline(k));
 
-          // Vertical crosshair line (showing Date in Label)
-          vertLine: {
-            width: 4,
-            color: "#C3BCDB44",
-            style: LineStyle.Solid,
-            labelBackgroundColor: "#9B7DFF",
-          },
 
-          // Horizontal crosshair line (showing Price in Label)
-          horzLine: {
-            color: "#9B7DFF",
-            labelBackgroundColor: "#9B7DFF",
-          },
-        },
-      });
+    chart.setTargetTimeframe('1m');
 
-      chart.timeScale().applyOptions({
-        borderColor: "#71649C",
-      });
 
-      const series = chart.addSeries(CandlestickSeries, {
-        upColor: '#26a69a',
-        downColor: '#ef5350',
-        borderVisible: false,
-        wickUpColor: '#26a69a',
-        wickDownColor: '#ef5350',
-      });
-
-      const data = generateData(2500, 20, 1000);
-      series.setData(data.initialData);
-      chart.timeScale().fitContent();
-
-      //@ts-ignore
-      chart.timeScale().scrollToPosition(5);
-      // simulate real-time data
-      function* getNextRealtimeUpdate(realtimeData) {
-        for (const dataPoint of realtimeData) {
-          yield dataPoint;
-        }
-        return null;
+    WsManager.getInstance().registerCallback("trade", (data: any) => {
+      console.log(data.time, "-------------------------")
+      const candle = {
+        low: Number(data.price),
+        high: Number(data.price),
+        open: Number(data.price),
+        close: Number(data.price),
+        time: data.time / 1000,
+        volume: Number(data.quantity)
       }
-      const streamingDataProvider = getNextRealtimeUpdate(data.realtimeUpdates);
+      chart.upsertKline(candle);
+    }, `TRADE-${"market"}`)
 
-      const lineData = data.initialData.map((datapoint) => ({
-        time: datapoint.time,
-        value: (datapoint.close + datapoint.open) / 2,
-      }));
+  }
 
-      // Add an area series to the chart,
-      // Adding this before we add the candlestick chart
-      // so that it will appear beneath the candlesticks
-      const areaSeries = chart.addSeries(AreaSeries, {
-        lastValueVisible: false, // hide the last value marker for this series
-        crosshairMarkerVisible: false, // hide the crosshair marker for this series
-        lineColor: "transparent", // hide the line
-        topColor: "rgba(56, 33, 110,0.6)",
-        bottomColor: "rgba(56, 33, 110, 0.1)",
-      });
-      // Set the data for the Area Series
-      areaSeries.setData(lineData);
+  useEffect(() => {
+    candleData1m()
 
-     
+  }, [])
 
-    
+  useEffect(() => {
 
 
+    return () => {
+      WsManager.getInstance().deRegisterCallback("trade", `DEPTH-${"market"}`);
+    }
+  }, [])
 
-      const intervalID = setInterval(() => {
-        const update = streamingDataProvider.next();
-        if (update.done) {
-          clearInterval(intervalID);
-          return;
-        }
-        series.update(update.value);
-      }, 100);
-      window.addEventListener('resize', handleResize);
+  // useEffect(
+  //   () => {
+  //     const handleResize = () => {
+  //       //@ts-ignore
+  //       chart.applyOptions({ width: chartContainerRef.current.clientWidth });
+  //     };
 
-      return () => {
-        window.removeEventListener('resize', handleResize);
+  //     const chart = createChart(chartContainerRef.current, {
+  //       layout: {
+  //         background: { type: ColorType.Solid, color: backgroundColor },
+  //         textColor,
+  //       },
+  //       //@ts-ignore
 
-        chart.remove();
-      };
-    },
-    [data, backgroundColor, lineColor, textColor, areaTopColor, areaBottomColor]
-  );
+  //       width: chartContainerRef.current.clientWidth,
+  //       height: 400,
+  //       grid: {
+  //         vertLines: { color: "#444" },
+  //         horzLines: { color: "#444" },
+  //       },
+  //     });
+
+  //     chart.timeScale().applyOptions({
+  //       barSpacing: 10,
+  //     });
+
+  //     chart.applyOptions({
+  //       crosshair: {
+  //         // Change mode from default 'magnet' to 'normal'.
+  //         // Allows the crosshair to move freely without snapping to datapoints
+  //         mode: CrosshairMode.Normal,
+
+  //         // Vertical crosshair line (showing Date in Label)
+  //         vertLine: {
+  //           width: 4,
+  //           color: "#C3BCDB44",
+  //           style: LineStyle.Solid,
+  //           labelBackgroundColor: "#9B7DFF",
+  //         },
+
+  //         // Horizontal crosshair line (showing Price in Label)
+  //         horzLine: {
+  //           color: "#9B7DFF",
+  //           labelBackgroundColor: "#9B7DFF",
+  //         },
+  //       },
+  //     });
+
+  //     chart.timeScale().applyOptions({
+  //       borderColor: "#71649C",
+  //     });
+
+  //     const series = chart.addSeries(CandlestickSeries, {
+  //       upColor: '#26a69a',
+  //       downColor: '#ef5350',
+  //       borderVisible: false,
+  //       wickUpColor: '#26a69a',
+  //       wickDownColor: '#ef5350',
+  //     });
+
+
+  //     candleRef.current = series
+
+  //     const data = generateData(2500, 20, 1000);
+  //     series.setData(data.initialData);
+  //     chart.timeScale().fitContent();
+
+  //     //@ts-ignore
+  //     chart.timeScale().scrollToPosition(5);
+  //     // simulate real-time data
+  //     function* getNextRealtimeUpdate(realtimeData) {
+  //       for (const dataPoint of realtimeData) {
+  //         yield dataPoint;
+
+  //       }
+  //       return null;
+  //     }
+
+  //     console.log(data.realtimeUpdates)
+  //     console.log(data.initialData)
+
+
+  //     const streamingDataProvider = getNextRealtimeUpdate(data.realtimeUpdates);
+
+  //     const lineData = data.initialData.map((datapoint) => ({
+  //       time: datapoint.time,
+  //       value: (datapoint.close + datapoint.open) / 2,
+  //     }));
+
+  //     // Add an area series to the chart,
+  //     // Adding this before we add the candlestick chart
+  //     // so that it will appear beneath the candlesticks
+  //     const areaSeries = chart.addSeries(AreaSeries, {
+  //       lastValueVisible: false, // hide the last value marker for this series
+  //       crosshairMarkerVisible: false, // hide the crosshair marker for this series
+  //       lineColor: "transparent", // hide the line
+  //       topColor: "rgba(56, 33, 110,0.6)",
+  //       bottomColor: "rgba(56, 33, 110, 0.1)",
+  //     });
+  //     // Set the data for the Area Series
+  //     areaSeries.setData(lineData);
+
+
+
+
+
+
+
+  //     // const intervalID = setInterval(() => {
+  //     //   const update = streamingDataProvider.next();
+  //     //   if (update.done) {
+  //     //     clearInterval(intervalID);
+  //     //     return;
+  //     //   }
+  //     //   series.update(update.value);
+  //     //   // console.log(update.value)
+  //     //   areaSeries.update({
+  //     //     time: update.value.time,
+  //     //     value: (update.value.close + update.value.open) / 2
+  //     //   })
+  //     // }, 100);
+  //     window.addEventListener('resize', handleResize);
+
+  //     return () => {
+  //       window.removeEventListener('resize', handleResize);
+
+  //       chart.remove();
+  //     };
+  //   },
+  //   [data, backgroundColor, lineColor, textColor, areaTopColor, areaBottomColor]
+  // );
 
   return (
     <div
@@ -172,35 +262,8 @@ export function TradingViewChart(props) {
   );
 }
 
-function generateTimeSeries(startTime, count) {
-  const data = [];
-  let currentTime = new Date(startTime).getTime();
-  let value = 30.0; // starting value
 
-  for (let i = 0; i < count; i++) {
-    // Push time in ISO format and rounded value
-    data.push({
-      time: new Date(currentTime).toISOString(),
-      value: parseFloat(value.toFixed(2))
-    });
 
-    // Increment time by 5 seconds
-    currentTime += 5000;
-
-    // Simulate small change in value (±0.1 to ±0.5)
-    const change = (Math.random() * 0.4 + 0.1) * (Math.random() < 0.5 ? -1 : 1);
-    value += change;
-  }
-    
-
-  
-
-  return data;
-}
-
-// Example usage:
-const realTimeData = generateTimeSeries('2025-06-24T18:00:00Z', 10);
-console.log(realTimeData);
 
 
 
@@ -237,7 +300,7 @@ function generateData(
   });
 
   randomFactor = 25 + Math.random() * 25;
-  const date = new Date(Date.UTC(2018, 0, 1, 12, 0, 0, 0));
+  const date = new Date(Date.UTC(2025, 6, 28, 12, 43, 333, 0));
   const numberOfPoints = numberOfCandles * updatesPerCandle;
   const initialData = [];
   const realtimeUpdates = [];
@@ -245,9 +308,10 @@ function generateData(
   let previousValue = samplePoint(-1);
   for (let i = 0; i < numberOfPoints; ++i) {
     if (i % updatesPerCandle === 0) {
-      date.setUTCDate(date.getUTCDate() + 1);
+      //date.setUTCDate(date.getUTCDate() + 1);
+      date.setUTCMinutes(date.getUTCMinutes() + 1)
     }
-    const time = date.getTime() / 1000;
+    const time = Math.floor(date.getTime() / 1000);
     let value = samplePoint(i);
     const diff = (value - previousValue) * Math.random();
     value = previousValue + diff;

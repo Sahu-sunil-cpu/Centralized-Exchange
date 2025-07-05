@@ -28,18 +28,18 @@ globalRouter.get("/depth/:market", (req, res) => {
     getDepth(req, res);
 })
 
-globalRouter.delete("/order", (req, res) => {
-    const { orderId, market } = req.body;
-    const response = new RedisManager();
-    response.sendAndAwait({
-        type: CANCEL_ORDER,
-        data: {
-            orderId,
-            market,
-        }
-    })
-    res.send("deleted");
-})
+// globalRouter.delete("/order", (req, res) => {
+//     const { orderId, market } = req.body;
+//     const response = new RedisManager();
+//     response.sendAndAwait({
+//         type: CANCEL_ORDER,
+//         data: {
+//             orderId,
+//             market,
+//         }
+//     })
+//     res.send("deleted");
+// })
 
 globalRouter.get("/", (req, res) => {
     res.send("hi")

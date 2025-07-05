@@ -31,7 +31,12 @@ export const TradeHistory = ({ market }: { market: string }) => {
 
         return newTrade
       })
+      
 
+   
+      return () => {
+        WsManager.getInstance().deRegisterCallback("trade", `DEPTH-${market}`);
+      } 
     }, `TRADE-${market}`)
   }, [])
 

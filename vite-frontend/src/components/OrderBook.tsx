@@ -1,9 +1,10 @@
 
-import { getDepth, getTickers, getTrades } from '@/lib/httpClient';
+import { getDepth, getTickers, getTrades, orderData } from '@/lib/httpClient';
 import { WsManager } from '@/lib/WsManger';
 import React, { useEffect, useState } from 'react';
 import { BidTable } from './orderbook/bids';
 import { Asks, AskTable } from './orderbook/asks';
+import axios from 'axios';
 
 
 
@@ -58,6 +59,34 @@ export function Depth({ market }: { market: string }) {
   const [bids, setBids] = useState<[string, string][]>();
   const [asks, setAsks] = useState<[string, string][]>();
   const [price, setPrice] = useState<string>();
+
+
+
+
+  // useEffect(() => {
+ 
+  //   const interval = setInterval(async () => {
+  //     const data = orderData.next();
+  //       if (data.done) {
+  //         clearInterval(interval);
+  //         return;
+  //       }
+
+  //       //console.log(data.value)
+  //       const value = data.value;
+  //       console.log(value)
+        
+  //    const response = await axios.post('http://localhost:3001/api/v1/order', {
+  //      value
+  //    })
+  
+  //    console.log(response)
+  //   }, 3000)
+  // }, [])
+
+
+
+
 
   useEffect(() => {
     WsManager.getInstance().registerCallback("depth", (data: any) => {

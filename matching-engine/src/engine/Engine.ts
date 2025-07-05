@@ -12,7 +12,7 @@ interface UserBalance {
     }
 }
 
-const manager = new RedisManager();
+// const manager = new RedisManager();
 
 export class Engine {
     private orderbooks: Orderbook[] = [];
@@ -118,7 +118,7 @@ export class Engine {
 
     publishWsTrades(fills: Fill[], userId: string, market: string) {
         fills.forEach(fill => {
-            manager.sendToWs(`trade@${market}`, {
+            RedisManager.getInstance().sendToWs(`trade@${market}`, {
                 stream: `trade@${market}`,
                 data: {
                     e: "trade",
@@ -141,7 +141,7 @@ export class Engine {
         const updatedBids = depth?.bids.filter(x => x[0] === price);
         const updatedAsks = depth?.asks.filter(x => x[0] === price);
 
-         manager.sendToWs(`depth@${market}`, {
+         RedisManager.getInstance().sendToWs(`depth@${market}`, {
             stream: `depth@${market}`,
             data: {
                 a: updatedAsks.length ? updatedAsks : [[price, "0"]],
@@ -161,7 +161,7 @@ export class Engine {
             const updatedAsks = depth?.asks.filter(x => fills.map(f => f.price).includes(x[0].toString()));
             const updatedBid = depth?.bids.find(x => x[0] === price);
             console.log("publish ws depth updates")
-            manager.sendToWs(`depth@${market}`, {
+            RedisManager.getInstance().sendToWs(`depth@${market}`, {
                 stream: `depth@${market}`,
                 data: {
                     a: updatedAsks,
@@ -186,7 +186,7 @@ export class Engine {
             const updatedBids = depth?.bids.filter(x => fills.map(f => f.price).includes(x[0].toString()));
             const updatedAsk = depth?.asks.find(x => x[0] === price);
             console.log("publish ws depth updates")
-               manager.sendToWs(`depth@${market}`, {
+               RedisManager.getInstance().sendToWs(`depth@${market}`, {
                    stream: `depth@${market}`,
                    data: {
                        a: updatedAsk ? [updatedAsk] : [],
@@ -279,7 +279,7 @@ export class Engine {
     setBaseBalances() {
         this.balances.set("1", {
             [BASE_CURRENCY]: {
-                available: 10000000,
+                available: 1000000,
                 locked: 0
             },
             "TATA": {

@@ -7,7 +7,6 @@ import { createClient } from "redis";
 const engine = new Engine();
 const client = createClient();
 
-const manager = new RedisManager();
 
 // here websockets needed to be implemented
 export function QueueHandler(clientId: string, message: incomingData ) {
@@ -24,7 +23,7 @@ export function QueueHandler(clientId: string, message: incomingData ) {
 
                 const { executedQty, fills, orderId } = engine.createOrder(data.market, data.price, data.quantity, data.side, data.userId);
              
-                manager.sendToApi(clientId, {
+                RedisManager.getInstance().sendToApi(clientId, {
                     type: "ORDER_PLACED",
                     data: {
                         orderId,
@@ -34,14 +33,14 @@ export function QueueHandler(clientId: string, message: incomingData ) {
                 })
             } catch (e) {
                 console.log(e);
-                // RedisManager.getInstance().sendToApi(clientId, {
-                //     type: "ORDER_CANCELLED",
-                //     data: {
-                //         orderId: "",
-                //         executedQty: 0,
-                //         remainingQty: 0
-                //     }
-                // });
+                RedisManager.getInstance().sendToApi(clientId, {
+                    type: "ORDER_CANCELLED",
+                    data: {
+                        orderId: "",
+                        executedQty: 0,
+                        remainingQty: 0
+                    }
+                });
             }
             break;
         case Actions.cancel_order:
@@ -85,17 +84,17 @@ export function QueueHandler(clientId: string, message: incomingData ) {
                     }
                 }
 
-                // RedisManager.getInstance().sendToApi(clientId, {
-                //     type: "ORDER_CANCELLED",
-                //     data: {
-                //         orderId,
-                //         executedQty: 0,
-                //         remainingQty: 0
-                //     }
-                // });
+                RedisManager.getInstance().sendToApi(clientId, {
+                    type: "ORDER_CANCELLED",
+                    data: {
+                        orderId: "",
+                        executedQty: 0,
+                        remainingQty: 0
+                    }
+                });
 
             } catch (e) {
-                console.log("Error hwile cancelling order",);
+                console.log("Error while cancelling order",);
                 console.log(e);
             }
             break;
@@ -110,14 +109,15 @@ export function QueueHandler(clientId: string, message: incomingData ) {
                 }
                 const openOrders = openOrderbook.getOpenOrders(openOrderData.userId);
 
-                // RedisManager.getInstance().sendToApi(clientId, {
-                //     type: "OPEN_ORDERS",
-                //     data: openOrders
-                // }); 
+                RedisManager.getInstance().sendToApi(clientId, {
+                    type: "OPEN_ORDERS",
+                    data: openOrders
+                }); 
             } catch (e) {
                 console.log(e);
             }
             break;
+
         case Actions.on_ramp:
             const onRampData = message.data;
 
@@ -125,6 +125,7 @@ export function QueueHandler(clientId: string, message: incomingData ) {
             const amount = Number(onRampData.amount);
             engine.onRamp(userId, amount);
             break;
+
         case Actions.get_depth:
             const depthData = message.data;
 
@@ -134,19 +135,19 @@ export function QueueHandler(clientId: string, message: incomingData ) {
                 if (!orderbook) {
                     throw new Error("No orderbook found");
                 }
-                // RedisManager.getInstance().sendToApi(clientId, {
-                //     type: "DEPTH",
-                //     data: orderbook.getDepth()
-                // });
+                RedisManager.getInstance().sendToApi(clientId, {
+                    type: "DEPTH",
+                    data: orderbook.getDepth()
+                });
             } catch (e) {
                 console.log(e);
-                // RedisManager.getInstance().sendToApi(clientId, {
-                //     type: "DEPTH",
-                //     data: {
-                //         bids: [],
-                //         asks: []
-                //     }
-                // });
+                RedisManager.getInstance().sendToApi(clientId, {
+                    type: "DEPTH",
+                    data: {
+                        bids: [],
+                        asks: []
+                    }
+                });
             }
             break;
     }

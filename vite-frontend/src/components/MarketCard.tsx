@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { TrendingUp, TrendingDown } from "lucide-react";
 
 interface Market {
@@ -28,6 +28,11 @@ const Sparkline = ({ data, isPositive }: { data: number[], isPositive: boolean }
     const y = 100 - ((value - min) / range) * 100;
     return `${x},${y}`;
   }).join(' ');
+
+useEffect(() => {
+  
+}, [])
+
 
   return (
     <svg className="w-16 h-8">
