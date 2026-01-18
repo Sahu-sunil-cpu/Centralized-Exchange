@@ -12,7 +12,8 @@ export type MessageToEngine = {
         price: string,
         quantity: string,
         side: "buy" | "sell",
-        userId: string
+        userId: string,
+        orderId: string
     }
 } | {
     type: typeof CANCEL_ORDER,
@@ -42,14 +43,14 @@ export type MessageToEngine = {
 
 export type MessageFromOrderbook = {
     type: "DEPTH",
-    payload: {
+    data: {
         market: string,
         bids: [string, string][],
         asks: [string, string][],
     }
 } | {
     type: "ORDER_PLACED",
-    payload: {
+    data: {
         orderId: string,
         executedQty: number,
         fills: [
@@ -62,14 +63,14 @@ export type MessageFromOrderbook = {
     }
 } | {
     type: "ORDER_CANCELLED",
-    payload: {
+    data: {
         orderId: string,
         executedQty: number,
         remainingQty: number
     }
 } | {
     type: "OPEN_ORDERS",
-    payload: {
+    data: {
         orderId: string,
         executedQty: number,
         price: string,

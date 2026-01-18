@@ -1,4 +1,3 @@
-import { timeStamp } from "node:console";
 
 //write types for incoming and outgoing message
 export const BASE_URL = "ws://localhost:8080"

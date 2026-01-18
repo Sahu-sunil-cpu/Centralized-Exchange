@@ -46,7 +46,8 @@ const GetOrderSchema = z.object({
     quantity: z.string(),
     side: z.enum(["buy", "sell"]),
     market: z.string(),
-    userId: z.string(),  
+    userId: z.string(), 
+    orderId: z.string() 
 })
 
 export type CreateOrderType = z.infer<typeof GetOrderSchema>;

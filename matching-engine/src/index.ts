@@ -17,11 +17,12 @@ export function QueueHandler(clientId: string, message: incomingData ) {
 
     switch (message.type) {
         case Actions.create_order:
+             const msg = message.data;
             try {
-                const data = message.data;
-                console.log(data.side)
+               
+                console.log(msg.side)
 
-                const { executedQty, fills, orderId } = engine.createOrder(data.market, data.price, data.quantity, data.side, data.userId);
+                const { executedQty, fills, orderId } = engine.createOrder(msg.market, msg.price, msg.quantity, msg.side, msg.userId, msg.orderId);
              
                 RedisManager.getInstance().sendToApi(clientId, {
                     type: "ORDER_PLACED",
@@ -36,7 +37,7 @@ export function QueueHandler(clientId: string, message: incomingData ) {
                 RedisManager.getInstance().sendToApi(clientId, {
                     type: "ORDER_CANCELLED",
                     data: {
-                        orderId: "",
+                        orderId: msg.orderId,
                         executedQty: 0,
                         remainingQty: 0
                     }
@@ -87,7 +88,7 @@ export function QueueHandler(clientId: string, message: incomingData ) {
                 RedisManager.getInstance().sendToApi(clientId, {
                     type: "ORDER_CANCELLED",
                     data: {
-                        orderId: "",
+                        orderId: data.orderId,
                         executedQty: 0,
                         remainingQty: 0
                     }

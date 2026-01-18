@@ -4,7 +4,6 @@
 export type WsType = {
     stream: string,
     data: {
-        e: string,
         t: number,
         m: boolean,
         p: string,

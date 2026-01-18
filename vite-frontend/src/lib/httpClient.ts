@@ -2,7 +2,6 @@
 import axios from "axios"
 import { BASE_URL } from "./utils"
 import { Depth, Ticker, Trade } from "./types";
-import { machine } from "os";
 
 
 export const getTickers = async (market: string): Promise<Ticker[]> => {

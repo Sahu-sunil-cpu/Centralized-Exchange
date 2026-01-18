@@ -30,7 +30,7 @@ export const ChartComponent = props => {
   const chartContainerRef = useRef(null);
 
   const getData = async () => {
-    const url = `http://localhost:4000/proxy?symbol=BTCUSDT&interval=5m`;
+    const url = `http://localhost:5000/proxy?symbol=BTCUSDT&interval=1d`;
     const res = await fetch(url);
     const resp = await res.json();
     //   console.log(resp);
@@ -87,7 +87,7 @@ export const ChartComponent = props => {
         volume: Number(data.quantity)
       }
       chart.upsertKline(candle);
-    }, `TRADE-${"market"}`)
+    }, `TRADE-${"TATA_INR"}`)
 
   }
 
@@ -100,7 +100,7 @@ export const ChartComponent = props => {
 
 
     return () => {
-      WsManager.getInstance().deRegisterCallback("trade", `DEPTH-${"market"}`);
+      WsManager.getInstance().deRegisterCallback("trade", `DEPTH-${"TATA_INR"}`);
     }
   }, [])
 

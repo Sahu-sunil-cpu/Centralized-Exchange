@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -29,10 +28,10 @@ const Exchange = () => {
     const message = {
       type: "ADD_USER",
       payload: {
-        tickerId: `@${ticker}`
+        tickerId: "@TATA_INR"
       }
     }
-
+    
     WsManager.getInstance().init();
     WsManager.getInstance().sendMessage(message);
 

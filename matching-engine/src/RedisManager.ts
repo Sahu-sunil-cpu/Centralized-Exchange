@@ -37,5 +37,13 @@ export class RedisManager {
         }
     }
 
+     public sendToStorage(channel: string, message: WsType) {
+        try {
+            this.client.lPush("channel_storage", JSON.stringify(message));
+        } catch (error) {
+            console.error("Redis error: pushing error ws", error);
+        }
+    }
+
 
 }

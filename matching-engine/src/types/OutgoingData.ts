@@ -65,10 +65,6 @@ const cancelOrder = z.object({
     remainingQty: z.number()
 })
 
-
-
-
-
 const orderUpdate = z.object({
     orderId: z.string(),
     executedQty: z.number(),
@@ -83,7 +79,6 @@ const orderUpdate = z.object({
 export type WsType = {
     stream: string,
     data: {
-        e: string,
         t: number,
         m: boolean,
         p: string,
@@ -96,6 +91,17 @@ export type WsType = {
         a: [string, string][],
         b: [string, string][],
         e: string
+    }
+}
+
+export type StorageType= {
+    stream: string,
+    data: {
+        t: number,
+        m: boolean,
+        p: string,
+        q: string,
+        s: string,
     }
 }
 

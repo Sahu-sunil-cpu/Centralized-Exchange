@@ -44,11 +44,11 @@ export class Engine {
         this.orderbooks.push(orderbook);
     }
 
-    createOrder(market: string, price: string, quantity: string, side: "buy" | "sell", userId: string) {
+    createOrder(market: string, price: string, quantity: string, side: "buy" | "sell", userId: string, orderId: string) {
         console.log(this.orderbooks)
         const orderbook = this.orderbooks.find(o => o.ticker() === market)
-        const baseAsset = market.split("_")[0];
-        const quoteAsset = market.split("_")[1];
+        const baseAsset = market.split("_")[1];
+        const quoteAsset = market.split("_")[0];
 
         if (!orderbook) {
             throw new Error("No orderbook found");
@@ -59,7 +59,7 @@ export class Engine {
         const order: Order = {
             price: Number(price),
             quantity: Number(quantity),
-            orderId: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
+            orderId: orderId,
             filled: 0,
             side,
             userId
@@ -121,12 +121,22 @@ export class Engine {
             RedisManager.getInstance().sendToWs(`trade@${market}`, {
                 stream: `trade@${market}`,
                 data: {
-                    e: "trade",
-                    t: fill.tradeId,
+                    t: fill.tradeId,  // trade id
                     m: fill.otherUserId === userId, // TODO: Is this right?
-                    p: fill.price,
-                    q: fill.qty.toString(),
-                    s: market,
+                    p: fill.price, // price
+                    q: fill.qty.toString(), // quantity
+                    s: market, // market e.g. TATA_INR
+                }
+            });
+
+             RedisManager.getInstance().sendToStorage(`channel_storage`, {
+                stream: `trade@${market}`,
+                data: {
+                    t: fill.tradeId,  // trade id
+                    m: fill.otherUserId === userId, // TODO: Is this right?
+                    p: fill.price, // price
+                    q: fill.qty.toString(), // quantity
+                    s: market, // market e.g. TATA_INR
                 }
             });
         });
