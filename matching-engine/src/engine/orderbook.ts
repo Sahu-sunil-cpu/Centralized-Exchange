@@ -10,6 +10,9 @@ export interface Order {
     filled: number;
     side: "buy" | "sell";
     userId: string;
+    time: string;
+    market: string;
+    type: string;
 }
 
 export interface Fill {

@@ -13,7 +13,8 @@ export type MessageToEngine = {
         quantity: string,
         side: "buy" | "sell",
         userId: string,
-        orderId: string
+        orderId: string,
+        type: string
     }
 } | {
     type: typeof CANCEL_ORDER,

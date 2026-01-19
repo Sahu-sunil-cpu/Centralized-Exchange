@@ -9,21 +9,24 @@ const client = createClient();
 
 
 // here websockets needed to be implemented
-export function QueueHandler(clientId: string, message: incomingData ) {
+export function QueueHandler(clientId: string, message: incomingData) {
 
-// console.log(message)
-// console.log(message.data)
+    // console.log(message)
+    // console.log(message.data)
 
 
     switch (message.type) {
         case Actions.create_order:
-             const msg = message.data;
+            const msg = message.data;
             try {
-               
-                console.log(msg.side)
 
-                const { executedQty, fills, orderId } = engine.createOrder(msg.market, msg.price, msg.quantity, msg.side, msg.userId, msg.orderId);
-             
+                console.log(msg.side)
+                const istTime = new Date().toLocaleString("en-IN", {
+                    timeZone: "Asia/Kolkata"
+                });
+
+                const { executedQty, fills, orderId } = engine.createOrder(msg.market, msg.price, msg.quantity, msg.side, msg.userId, msg.orderId, istTime, msg.type);
+
                 RedisManager.getInstance().sendToApi(clientId, {
                     type: "ORDER_PLACED",
                     data: {
@@ -113,7 +116,7 @@ export function QueueHandler(clientId: string, message: incomingData ) {
                 RedisManager.getInstance().sendToApi(clientId, {
                     type: "OPEN_ORDERS",
                     data: openOrders
-                }); 
+                });
             } catch (e) {
                 console.log(e);
             }
@@ -167,20 +170,20 @@ async function StartEngine() {
                 const response = await client.brPop("messages", 0);
                 const element = response?.element as string;
                 console.log(element)
-               
-                    const {clientId, message} = JSON.parse(element);
-               
-                    await QueueHandler(clientId, message);
-                
-            
-                
+
+                const { clientId, message } = JSON.parse(element);
+
+                await QueueHandler(clientId, message);
+
+
+
             } catch (error) {
                 console.error("error while popping elements from queue");
             }
         }
     } catch (error) {
         console.error("error connecting to redis");
-       
+
     }
 }
 

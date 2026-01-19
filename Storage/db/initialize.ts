@@ -31,6 +31,7 @@ async function initializeDB() {
         status order_status NOT NULL,
         market market_type NOT NULL,
         userId BIGSERIAL NOT NULL,
+        order_type TEXT,
         CONSTRAINT fk_user
           FOREIGN KEY (userId)
           REFERENCES users(id)

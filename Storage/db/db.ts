@@ -9,7 +9,7 @@ export async function InsertTrades(price: number, qty: number, pair: string, ts:
         );
         console.log("inserted")
     }catch (e) {
-
+       console.log(e)
     }
 
 }

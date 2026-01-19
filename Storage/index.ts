@@ -38,7 +38,7 @@ async function ListenToStream() {
             const price = Number(msg.data.p);
             const pair = "TATA_INR"
             const qty = Number(msg.data.q);
-            const ts = Date.now().toString()
+            const ts = new Date().toISOString();
 
             await InsertTrades(price, qty, pair, ts)
 

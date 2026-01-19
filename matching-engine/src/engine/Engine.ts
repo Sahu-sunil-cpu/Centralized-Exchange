@@ -44,7 +44,7 @@ export class Engine {
         this.orderbooks.push(orderbook);
     }
 
-    createOrder(market: string, price: string, quantity: string, side: "buy" | "sell", userId: string, orderId: string) {
+    createOrder(market: string, price: string, quantity: string, side: "buy" | "sell", userId: string, orderId: string, time: string, type: string) {
         console.log(this.orderbooks)
         const orderbook = this.orderbooks.find(o => o.ticker() === market)
         const baseAsset = market.split("_")[1];
@@ -54,7 +54,7 @@ export class Engine {
             throw new Error("No orderbook found");
         }
 
-        this.checkAndLockFunds(baseAsset, quoteAsset, side, userId, quoteAsset, price, quantity);
+      //  this.checkAndLockFunds(baseAsset, quoteAsset, side, userId, quoteAsset, price, quantity);
 
         const order: Order = {
             price: Number(price),
@@ -62,7 +62,10 @@ export class Engine {
             orderId: orderId,
             filled: 0,
             side,
-            userId
+            userId,
+            time,
+            market,
+            type
         }
 
         const { fills, executedQty } = orderbook.addOrder(order);

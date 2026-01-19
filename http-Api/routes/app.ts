@@ -1,9 +1,5 @@
 import { Router } from "express";
-// import { globalRouter } from ".";
-import { RedisManager } from "../redis/RedisManager";
-import { CANCEL_ORDER, CREATE_ORDER } from "../types/Outgoing";
-import { getRandom } from "../utils";
-import { getDepth, PlaceOrder } from ".";
+import { getKlines, getOpenOrder, getOrderHistory, PlaceOrder } from ".";
 
 
 type OrderType = "limit" | "market";
@@ -24,9 +20,9 @@ globalRouter.post("/order", (req, res) => {
 })
 
 
-globalRouter.get("/depth/:market", (req, res) => {
-    getDepth(req, res);
-})
+// globalRouter.get("/depth/:market", (req, res) => {
+//     getDepth(req, res);
+// })
 
 // globalRouter.delete("/order", (req, res) => {
 //     const { orderId, market } = req.body;
@@ -41,6 +37,14 @@ globalRouter.get("/depth/:market", (req, res) => {
 //     res.send("deleted");
 // })
 
-globalRouter.get("/", (req, res) => {
-    res.send("hi")
+globalRouter.get("/openorders/:market/:userId", (req, res) => {
+    getOpenOrder(req, res);
+})
+
+globalRouter.get("/history/:ticker/:bucket", async (req, res) => {
+    getKlines(req, res)
+})
+
+globalRouter.get("/order/history/:userId", async (req, res) => {
+    getOrderHistory(req, res)
 })

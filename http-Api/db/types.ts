@@ -1,10 +1,11 @@
 export interface Order {
     userId: string;
-    type: "buy" | "sell";
+    side: "buy" | "sell";
     qty: string;
     market: string;
     price: string;
     id: string;
+    type: string;
 }
 
 export type Update = {
