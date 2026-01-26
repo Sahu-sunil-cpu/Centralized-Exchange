@@ -1,1 +1,0 @@
-{"root":["./src/redismanager.ts","./src/index.ts","./src/engine/engine.ts","./src/engine/orderbook.ts","./src/types/incomingdata.ts","./src/types/outgoingdata.ts"],"version":"5.6.3"}

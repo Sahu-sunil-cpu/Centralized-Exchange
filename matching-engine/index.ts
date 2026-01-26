@@ -1,7 +1,7 @@
 
 import { Engine } from "./engine/Engine";
 import { RedisManager } from "./RedisManager";
-import { Actions, incomingData } from "./types/IncomingData";
+import { Actions, type incomingData } from "./types/IncomingData";
 import { createClient } from "redis";
 
 const engine = new Engine();
