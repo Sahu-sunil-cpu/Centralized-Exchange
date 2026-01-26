@@ -6,6 +6,7 @@ import type { OutgoingMessage } from "../types/Outgoing";
 export class SubscriptionManager {
     private static instance: SubscriptionManager;
     private subscriptions: Map<string, string[]> = new Map();
+    private time: Map<string, string> = new Map();
     private reverseSubscriptions: Map<string, string[]> = new Map();
     private redisClient: RedisClientType;
 
@@ -58,7 +59,11 @@ export class SubscriptionManager {
 
     private redisCallbackHandler = (message: string, channel: string) => {
         const parsedMessage = JSON.parse(message);
-        this.reverseSubscriptions.get(channel)?.forEach(u => UserManager.getInstance().getUser(u)?.emit(parsedMessage));
+        this.reverseSubscriptions.get(channel)?.forEach(u => {
+            if (this.time.get(u) == parsedMessage.data.b) {
+              UserManager.getInstance().getUser(u)?.emit(parsedMessage)
+            } 
+        });
     }
 
     public userLeft(userId: string) {
@@ -66,6 +71,15 @@ export class SubscriptionManager {
         this.subscriptions.get(userId)?.forEach(s => this.unsubscribe(userId, s));
     }
 
+    public InsertTradeTime(time: string, userId: string) {
+        const subscriptions = this.subscriptions.get(userId);
+        if (subscriptions) {
+            this.time.set(userId, time);
+            return;
+        }
+
+        console.log("user is not subscribed");
+    }
     getSubscriptions(userId: string) {
         return this.subscriptions.get(userId) || [];
     }

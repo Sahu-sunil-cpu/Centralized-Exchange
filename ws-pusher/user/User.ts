@@ -1,5 +1,5 @@
 import { WebSocket } from "ws";
-import { SUBSCRIBE, UNSUBSCRIBE, type IncomingMessage } from "../types/Incoming";
+import { SUBSCRIBE, TIMEFRAME, UNSUBSCRIBE, type IncomingMessage } from "../types/Incoming";
 import { SubscriptionManager } from "../redis/SubscriptionManager";
 import type { OutgoingMessage } from "../types/Outgoing";
 
@@ -37,6 +37,10 @@ export class User {
 
             if (parsedMessage.method === UNSUBSCRIBE) {
                 parsedMessage.params.forEach(s => SubscriptionManager.getInstance().unsubscribe(this.id, parsedMessage.params[0]!));
+            }
+
+            if(parsedMessage.method === TIMEFRAME) {
+               SubscriptionManager.getInstance().InsertTradeTime(parsedMessage.params, this.id);
             }
         });
     }
