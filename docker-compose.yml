@@ -65,6 +65,8 @@ services:
   ws:
     image: sunilks761/ws
     container_name: ws
+    ports: 
+      - "8081:8081"
     depends_on:
       - redis
     networks: 

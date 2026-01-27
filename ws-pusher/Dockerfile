@@ -7,4 +7,6 @@ RUN bun install
 
 COPY . .
 
+EXPOSE 8081
+
 CMD [ "bun", "run", "index.ts" ]
