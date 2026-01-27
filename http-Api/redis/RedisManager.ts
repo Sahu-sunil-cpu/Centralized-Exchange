@@ -1,11 +1,15 @@
 import { createClient, type RedisClientType } from "redis";
 import type { MessageFromOrderbook, MessageToEngine } from "../types/Outgoing";
 
+const redis_url = process.env.REDIS_URL;
+if(!redis_url) throw new Error("REDIS_URLL is not set");
 export class RedisManager {
     private client: RedisClientType;
 
      constructor() {
-        this.client = createClient();
+        this.client = createClient({
+            url: redis_url
+        });
         this.client.connect();
     }
 

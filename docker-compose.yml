@@ -1,0 +1,88 @@
+version: '3.9'
+
+services:
+  redis:
+   image: redis
+   container_name: my-redis
+   ports:
+      - "6379:6379"
+   networks:
+      - common-network
+   restart: on-failure        
+   volumes:
+      - redisdata:/data
+
+  api:
+    image: sunilks761/api
+    container_name: api
+    ports: 
+      - "3001:3001"
+    depends_on:
+      - redis
+    restart: on-failure    
+    networks:
+      - common-network  
+    environment:
+      DATABASE_URL: postgresql://neondb_owner:npg_3e8LMfRFGDEK@ep-red-cell-ahbatetf-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+      REDIS_URL: redis://my-redis:6379 
+
+  aggregator:
+    image: sunilks761/aggrgator
+    container_name: aggregator
+    depends_on:
+      - redis
+    networks: 
+      - common-network 
+    restart: on-failure        
+    environment:
+      DATABASE_URL: postgresql://neondb_owner:npg_3e8LMfRFGDEK@ep-red-cell-ahbatetf-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+      REDIS_URL: redis://my-redis:6379  
+
+  matching-engine:
+    image: sunilks761/matching-engine
+    container_name: matching-engine
+    depends_on:
+      - redis
+    networks: 
+      - common-network 
+    restart: on-failure     
+    environment:
+      DATABASE_URL: postgresql://neondb_owner:npg_3e8LMfRFGDEK@ep-red-cell-ahbatetf-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+      REDIS_URL: redis://my-redis:6379  
+      
+  storage:
+    image: sunilks761/storage
+    container_name: storage
+    depends_on:
+      - redis
+    networks: 
+      - common-network
+    restart: on-failure       
+    environment:
+      DATABASE_URL: postgresql://neondb_owner:npg_3e8LMfRFGDEK@ep-red-cell-ahbatetf-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+      REDIS_URL: redis://my-redis:6379  
+
+  ws:
+    image: sunilks761/ws
+    container_name: ws
+    depends_on:
+      - redis
+    networks: 
+      - common-network 
+    restart: on-failure      
+    environment:
+      REDIS_URL: redis://my-redis:6379
+
+
+networks:
+  common-network:
+    driver: bridge        
+
+volumes:
+  # pgdata:
+  redisdata:
+
+
+#  sudo docker run --network my-network -e DATABASE_URL="postgresql://neondb_owner:npg_V0KJ6PtsQfaj@ep-gentle-shadow-a4u4c56t-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require" -e REDIS_URL="redis://m-redis:6379" sunilks761/uptime-worker-pusher
+
+#  sudo docker run --network my-network --name m-redis -p 6379:6379 -d redis

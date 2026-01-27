@@ -1,7 +1,11 @@
 import { createClient } from "redis";
 import { InsertTrades } from "./db/db";
 
-const client = createClient()
+const redis_url = process.env.REDIS_URL;
+if(!redis_url) throw new Error("REDIS URL not set")
+const client = createClient({
+    url: redis_url
+})
 client.on('error', err => console.log('Redis Client Error', err));
 
 await client.connect();

@@ -1,8 +1,8 @@
 import { createClient, type RedisClientType } from "redis";
 import { UserManager } from "../user/UserManager";
-import type { OutgoingMessage } from "../types/Outgoing";
 
-
+const redis_url = process.env.REDIS_URL;
+if(!redis_url) throw new Error("REDIS_URL not set");
 export class SubscriptionManager {
     private static instance: SubscriptionManager;
     private subscriptions: Map<string, string[]> = new Map();
@@ -13,7 +13,9 @@ export class SubscriptionManager {
 
 
     private constructor() {
-        this.redisClient = createClient();
+        this.redisClient = createClient({
+            url: redis_url
+        });
         this.redisClient.connect();
 
     }

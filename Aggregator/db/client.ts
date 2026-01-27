@@ -1,6 +1,9 @@
-import { Client } from "pg";
 
-export const client = new Client(process.env.DATABASE_URL);
+import { Pool } from "pg";
+
+const connectionString = process.env.DATABASE_URL;
+
+export const client = new Pool({connectionString});
 
 await client.connect()
 

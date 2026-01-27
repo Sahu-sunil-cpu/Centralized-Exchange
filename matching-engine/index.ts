@@ -4,8 +4,12 @@ import { RedisManager } from "./RedisManager";
 import { Actions, type incomingData } from "./types/IncomingData";
 import { createClient } from "redis";
 
+const redis_url = process.env.REDIS_URL;
+if(!redis_url) throw new Error("REDIS_URL is not set");
 const engine = new Engine();
-const client = createClient();
+const client = createClient({
+    url: redis_url
+});
 
 
 // here websockets needed to be implemented
